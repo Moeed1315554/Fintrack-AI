@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinTrack AI — Turn Your Financial Goals Into Reality</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-base: #080c0f;
+    --bg-surface: #0d1318;
+    --bg-card: #111820;
+    --bg-card-hover: #141e28;
+    --border: rgba(255,255,255,0.07);
+    --border-accent: rgba(32,210,140,0.25);
+    --green: #20d28c;
+    --green-dim: #17a36d;
+    --green-glow: rgba(32,210,140,0.12);
+    --green-glow-strong: rgba(32,210,140,0.22);
+    --teal: #0fccce;
+    --text-primary: #eef2f6;
+    --text-secondary: #8a9bb0;
+    --text-muted: #4d6070;
+    --white: #ffffff;
+    --nav-height: 72px;
+    --radius: 14px;
+    --radius-lg: 22px;
+    --radius-xl: 32px;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg-base);
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── NOISE TEXTURE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* ─── NAVBAR ─── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: var(--nav-height);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 clamp(24px, 5vw, 64px);
+    background: rgba(8,12,15,0.82);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border-bottom: 1px solid var(--border);
+    z-index: 1000;
+    transition: var(--transition);
+  }
+
+  .nav-logo {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--white);
+    text-decoration: none;
+    letter-spacing: -0.02em;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .nav-logo-mark {
+    width: 30px; height: 30px;
+    background: linear-gradient(135deg, var(--green), var(--teal));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+    color: #000;
+    font-weight: 800;
+  }
+
+  .nav-links {
+    display: flex; align-items: center; gap: 4px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    transition: var(--transition);
+    letter-spacing: 0.01em;
+  }
+
+  .nav-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+
+  .nav-links .nav-login {
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    padding: 8px 18px;
+  }
+
+  .nav-links .nav-login:hover { border-color: rgba(255,255,255,0.18); background: rgba(255,255,255,0.06); }
+
+  .nav-links .nav-signup {
+    color: #000;
+    background: var(--green);
+    padding: 8px 20px;
+    font-weight: 600;
+    border-radius: 9px;
+  }
+
+  .nav-links .nav-signup:hover { background: #25e89b; transform: translateY(-1px); box-shadow: 0 6px 24px rgba(32,210,140,0.35); }
+
+  .nav-hamburger {
+    display: none;
+    flex-direction: column; gap: 5px;
+    cursor: pointer; padding: 8px;
+  }
+
+  .nav-hamburger span {
+    width: 22px; height: 2px;
+    background: var(--text-secondary);
+    border-radius: 2px;
+    transition: var(--transition);
+  }
+
+  .nav-mobile {
+    display: none;
+    position: fixed; top: var(--nav-height); left: 0; right: 0;
+    background: rgba(8,12,15,0.97);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px 28px;
+    z-index: 999;
+    flex-direction: column; gap: 6px;
+  }
+
+  .nav-mobile a {
+    font-size: 0.95rem; font-weight: 500;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 12px 16px;
+    border-radius: 10px;
+    transition: var(--transition);
+    display: block;
+  }
+
+  .nav-mobile a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+  .nav-mobile .nm-signup { color: #000; background: var(--green); text-align: center; margin-top: 8px; font-weight: 600; }
+
+  /* ─── SECTIONS SHARED ─── */
+  section { position: relative; z-index: 1; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 48px); }
+
+  .section-label {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--green);
+    margin-bottom: 20px;
+  }
+
+  .section-label::before {
+    content: '';
+    width: 20px; height: 1.5px;
+    background: var(--green);
+    display: block;
+  }
+
+  h1, h2, h3, h4 { font-family: var(--font-display); }
+
+  /* ─── HERO ─── */
+  .hero {
+    padding-top: calc(var(--nav-height) + 80px);
+    padding-bottom: 100px;
+    overflow: hidden;
+  }
+
+  .hero-bg-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+  }
+
+  .hero-bg-orb-1 {
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(32,210,140,0.12) 0%, transparent 70%);
+    top: -100px; left: -100px;
+  }
+
+  .hero-bg-orb-2 {
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(15,204,206,0.08) 0%, transparent 70%);
+    top: 100px; right: -80px;
+  }
+
+  .hero-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 7px 16px 7px 7px;
+    background: rgba(32,210,140,0.08);
+    border: 1px solid rgba(32,210,140,0.2);
+    border-radius: 100px;
+    font-size: 0.8rem; color: var(--green); font-weight: 500;
+    margin-bottom: 28px;
+  }
+
+  .hero-badge-dot {
+    width: 22px; height: 22px;
+    background: rgba(32,210,140,0.2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .hero-badge-dot::after {
+    content: '';
+    width: 8px; height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+    display: block;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .hero h1 {
+    font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: var(--white);
+    margin-bottom: 24px;
+  }
+
+  .hero h1 .highlight {
+    background: linear-gradient(135deg, var(--green) 0%, var(--teal) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    line-height: 1.75;
+    margin-bottom: 32px;
+    max-width: 520px;
+    font-weight: 300;
+  }
+
+  .hero-pillars {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-bottom: 40px;
+  }
+
+  .hero-pillar {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 0.82rem; color: var(--text-secondary); font-weight: 500;
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    background: rgba(255,255,255,0.02);
+  }
+
+  .hero-pillar::before {
+    content: '✦';
+    font-size: 0.6rem; color: var(--green);
+  }
+
+  .hero-ctas {
+    display: flex; gap: 14px; flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 28px;
+    background: var(--green);
+    color: #000;
+    font-family: var(--font-body);
+    font-size: 0.92rem; font-weight: 600;
+    border-radius: 11px;
+    text-decoration: none;
+    transition: var(--transition);
+    letter-spacing: 0.01em;
+  }
+
+  .btn-primary:hover {
+    background: #25e89b;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(32,210,140,0.4);
+  }
+
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 28px;
+    background: transparent;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 0.92rem; font-weight: 500;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    text-decoration: none;
+    transition: var(--transition);
+  }
+
+  .btn-secondary:hover {
+    border-color: rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.05);
+    transform: translateY(-2px);
+  }
+
+  /* ─── DASHBOARD MOCK ─── */
+  .hero-dashboard {
+    position: relative;
+  }
+
+  .dashboard-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+  }
+
+  .dashboard-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(32,210,140,0.5), transparent);
+  }
+
+  .dash-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .dash-title {
+    font-family: var(--font-display);
+    font-size: 1rem; font-weight: 700;
+    color: var(--white);
+  }
+
+  .dash-badge {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 0.72rem; font-weight: 600;
+    color: var(--green); padding: 4px 10px;
+    background: rgba(32,210,140,0.1);
+    border: 1px solid rgba(32,210,140,0.2);
+    border-radius: 100px;
+  }
+
+  .dash-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+
+  .dash-goals {
+    display: flex; flex-direction: column; gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .dash-goal-item {}
+
+  .dash-goal-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .dash-goal-name {
+    font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .dash-goal-icon {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.68rem;
+  }
+
+  .dash-goal-pct { font-size: 0.8rem; font-weight: 700; color: var(--white); }
+
+  .progress-track {
+    height: 6px; border-radius: 100px;
+    background: rgba(255,255,255,0.07);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%; border-radius: 100px;
+    background: linear-gradient(90deg, var(--green), var(--teal));
+    position: relative;
+  }
+
+  .progress-fill::after {
+    content: '';
+    position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--teal);
+    box-shadow: 0 0 8px var(--teal);
+  }
+
+  .dash-divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  .dash-stats {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 14px; margin-bottom: 20px;
+  }
+
+  .dash-stat {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px;
+  }
+
+  .dash-stat-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .dash-stat-val { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; color: var(--white); }
+  .dash-stat-change { font-size: 0.72rem; color: var(--green); font-weight: 600; margin-top: 2px; }
+
+  .dash-ai-tip {
+    background: linear-gradient(135deg, rgba(32,210,140,0.07), rgba(15,204,206,0.05));
+    border: 1px solid rgba(32,210,140,0.18);
+    border-radius: 12px; padding: 14px 16px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+
+  .dash-ai-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: rgba(32,210,140,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; flex-shrink: 0;
+    color: var(--green);
+  }
+
+  .dash-ai-text { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.55; }
+  .dash-ai-text strong { color: var(--green); font-weight: 600; }
+
+  .dash-mini-chart {
+    display: flex; align-items: flex-end; gap: 4px;
+    height: 40px; margin-top: 12px;
+  }
+
+  .chart-bar {
+    flex: 1; border-radius: 4px 4px 0 0;
+    background: linear-gradient(to top, var(--green-dim), rgba(32,210,140,0.3));
+    min-height: 8px; transition: var(--transition);
+  }
+
+  .chart-bar:hover { background: linear-gradient(to top, var(--green), rgba(32,210,140,0.6)); }
+
+  .dash-chart-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 6px; text-align: center; }
+
+  /* ─── TRUST STRIP ─── */
+  .trust-strip {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.015);
+    padding: 28px 0;
+  }
+
+  .trust-inner {
+    display: flex; align-items: center; justify-content: center;
+    gap: clamp(20px, 4vw, 60px); flex-wrap: wrap;
+  }
+
+  .trust-item {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .trust-icon {
+    width: 32px; height: 32px; border-radius: 9px;
+    background: var(--green-glow);
+    border: 1px solid var(--border-accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem;
+  }
+
+  .trust-divider {
+    width: 1px; height: 24px;
+    background: var(--border);
+  }
+
+  /* ─── FEATURES ─── */
+  .features {
+    padding: 120px 0;
+  }
+
+  .section-header {
+    text-align: center; max-width: 640px; margin: 0 auto 70px;
+  }
+
+  .section-header .section-label { justify-content: center; }
+  .section-header .section-label::before { display: none; }
+  .section-header .section-label::after { content: ''; width: 20px; height: 1.5px; background: var(--green); display: block; }
+
+  .section-header h2 {
+    font-size: clamp(2rem, 3.5vw, 2.9rem);
+    font-weight: 800; letter-spacing: -0.03em;
+    color: var(--white); margin-bottom: 16px;
+    line-height: 1.15;
+  }
+
+  .section-header p {
+    font-size: 1rem; color: var(--text-secondary);
+    line-height: 1.75; font-weight: 300;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+
+  .feature-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 32px 28px;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .feature-card::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(32,210,140,0.04), transparent 40%);
+    opacity: 0; transition: opacity 0.4s;
+    pointer-events: none;
+  }
+
+  .feature-card:hover {
+    border-color: var(--border-accent);
+    background: var(--bg-card-hover);
+    transform: translateY(-4px);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(32,210,140,0.1);
+  }
+
+  .feature-card:hover::after { opacity: 1; }
+
+  .feature-icon {
+    width: 48px; height: 48px;
+    border-radius: 13px;
+    background: var(--green-glow);
+    border: 1px solid var(--border-accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; margin-bottom: 22px;
+  }
+
+  .feature-card h3 {
+    font-size: 1.05rem; font-weight: 700;
+    color: var(--white); margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+
+  .feature-card p {
+    font-size: 0.875rem; color: var(--text-secondary);
+    line-height: 1.7; font-weight: 300;
+  }
+
+  .feature-tag {
+    display: inline-block; margin-top: 20px;
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em;
+    color: var(--green); text-transform: uppercase;
+  }
+
+  /* ─── HOW IT WORKS ─── */
+  .how {
+    padding: 100px 0;
+    background: rgba(255,255,255,0.012);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .steps-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 40px; position: relative;
+  }
+
+  .steps-grid::before {
+    content: '';
+    position: absolute; top: 52px; left: calc(16.666% + 24px); right: calc(16.666% + 24px);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-accent), var(--border-accent), transparent);
+    pointer-events: none;
+  }
+
+  .step-item { text-align: center; padding: 0 12px; }
+
+  .step-num-wrap {
+    display: flex; justify-content: center; margin-bottom: 28px;
+  }
+
+  .step-num {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 1px solid var(--border-accent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 1.1rem; font-weight: 800; color: var(--green);
+    position: relative; z-index: 1;
+    box-shadow: 0 0 0 6px var(--bg-base), 0 0 24px rgba(32,210,140,0.12);
+  }
+
+  .step-item h3 {
+    font-size: 1.1rem; font-weight: 700;
+    color: var(--white); margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+
+  .step-item p {
+    font-size: 0.875rem; color: var(--text-secondary);
+    line-height: 1.75; font-weight: 300; max-width: 280px; margin: 0 auto;
+  }
+
+  /* ─── WHY FINTRACK ─── */
+  .why {
+    padding: 120px 0;
+  }
+
+  .why-inner {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 80px; align-items: center;
+  }
+
+  .why-content h2 {
+    font-size: clamp(1.9rem, 3vw, 2.7rem);
+    font-weight: 800; letter-spacing: -0.03em;
+    color: var(--white); margin-bottom: 22px; line-height: 1.15;
+  }
+
+  .why-content p {
+    font-size: 0.95rem; color: var(--text-secondary);
+    line-height: 1.8; margin-bottom: 16px; font-weight: 300;
+  }
+
+  .why-points { margin-top: 36px; display: flex; flex-direction: column; gap: 16px; }
+
+  .why-point {
+    display: flex; gap: 14px; align-items: flex-start;
+  }
+
+  .why-point-icon {
+    width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+    background: var(--green-glow);
+    border: 1px solid var(--border-accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem;
+  }
+
+  .why-point-text strong { display: block; font-size: 0.9rem; color: var(--text-primary); font-weight: 600; margin-bottom: 3px; }
+  .why-point-text span { font-size: 0.82rem; color: var(--text-secondary); font-weight: 300; }
+
+  .why-visual {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+  }
+
+  .why-visual::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(32,210,140,0.4), transparent);
+  }
+
+  .why-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .why-stat-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px;
+  }
+
+  .why-stat-card.accent {
+    background: linear-gradient(135deg, rgba(32,210,140,0.08), rgba(15,204,206,0.05));
+    border-color: rgba(32,210,140,0.2);
+  }
+
+  .wsc-icon { font-size: 1.3rem; margin-bottom: 10px; }
+  .wsc-val { font-family: var(--font-display); font-size: 1.8rem; font-weight: 800; color: var(--white); letter-spacing: -0.02em; }
+  .wsc-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .why-monthly {
+    margin-top: 14px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px;
+  }
+
+  .why-monthly-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; font-weight: 500; }
+
+  .why-bars { display: flex; align-items: flex-end; gap: 6px; height: 60px; }
+
+  .why-bar {
+    flex: 1; border-radius: 4px 4px 0 0;
+    background: rgba(32,210,140,0.15);
+    transition: var(--transition);
+    cursor: default;
+  }
+
+  .why-bar:hover, .why-bar.active {
+    background: linear-gradient(to top, var(--green), rgba(32,210,140,0.5));
+  }
+
+  .why-months { display: flex; gap: 6px; margin-top: 6px; }
+  .why-month-label { flex: 1; text-align: center; font-size: 0.62rem; color: var(--text-muted); }
+
+  /* ─── GOALS SHOWCASE ─── */
+  .goals {
+    padding: 100px 0;
+    background: rgba(255,255,255,0.012);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .goals-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+  }
+
+  .goal-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    transition: var(--transition);
+    cursor: default;
+  }
+
+  .goal-card:hover {
+    border-color: var(--border-accent);
+    transform: translateY(-3px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+  }
+
+  .goal-card-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .goal-emoji { font-size: 1.5rem; }
+
+  .goal-pct-badge {
+    font-size: 0.72rem; font-weight: 700;
+    color: var(--green);
+    background: rgba(32,210,140,0.1);
+    border: 1px solid rgba(32,210,140,0.2);
+    padding: 3px 9px; border-radius: 100px;
+  }
+
+  .goal-card h4 {
+    font-size: 0.95rem; font-weight: 700;
+    color: var(--white); margin-bottom: 4px;
+    letter-spacing: -0.01em;
+  }
+
+  .goal-target { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 14px; }
+  .goal-saved { font-size: 0.82rem; color: var(--text-secondary); margin-top: 10px; }
+  .goal-saved span { color: var(--green); font-weight: 600; }
+
+  .goal-progress-track {
+    height: 5px; border-radius: 100px;
+    background: rgba(255,255,255,0.06);
+    overflow: hidden;
+  }
+
+  .goal-progress-fill {
+    height: 100%; border-radius: 100px;
+    background: linear-gradient(90deg, var(--green), var(--teal));
+  }
+
+  /* ─── CTA ─── */
+  .cta-section {
+    padding: 120px 0;
+  }
+
+  .cta-inner {
+    text-align: center;
+    max-width: 720px; margin: 0 auto;
+    position: relative;
+  }
+
+  .cta-glow {
+    position: absolute;
+    width: 500px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(32,210,140,0.1) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    filter: blur(60px);
+    pointer-events: none;
+  }
+
+  .cta-inner .section-label { justify-content: center; }
+  .cta-inner .section-label::before { display: none; }
+  .cta-inner .section-label::after { content: ''; width: 20px; height: 1.5px; background: var(--green); display: block; }
+
+  .cta-inner h2 {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800; letter-spacing: -0.03em;
+    color: var(--white); margin-bottom: 18px; line-height: 1.15;
+  }
+
+  .cta-inner p {
+    font-size: 1rem; color: var(--text-secondary);
+    line-height: 1.75; font-weight: 300; margin-bottom: 40px;
+  }
+
+  .cta-btns {
+    display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 56px 0 36px;
+    background: rgba(0,0,0,0.3);
+  }
+
+  .footer-inner {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    flex-wrap: wrap; gap: 36px; margin-bottom: 48px;
+  }
+
+  .footer-brand {}
+
+  .footer-logo {
+    font-family: var(--font-display);
+    font-size: 1.2rem; font-weight: 800;
+    color: var(--white); text-decoration: none;
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .footer-tagline { font-size: 0.85rem; color: var(--text-muted); max-width: 220px; line-height: 1.6; font-weight: 300; }
+
+  .footer-links { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .footer-links a {
+    font-size: 0.85rem; color: var(--text-muted);
+    text-decoration: none; padding: 6px 12px;
+    border-radius: 7px; transition: var(--transition);
+    font-weight: 500;
+  }
+
+  .footer-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.04); }
+
+  .footer-bottom {
+    padding-top: 28px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 12px;
+  }
+
+  .footer-copy { font-size: 0.8rem; color: var(--text-muted); }
+  .footer-built { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
+  .footer-built span { color: var(--green); }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 900px) {
+    .hero-inner { grid-template-columns: 1fr; gap: 56px; }
+    .why-inner { grid-template-columns: 1fr; gap: 48px; }
+    .steps-grid::before { display: none; }
+  }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .nav-hamburger { display: flex; }
+    .footer-inner { flex-direction: column; }
+    .footer-links { flex-direction: column; }
+  }
+
+  @media (max-width: 480px) {
+    .hero h1 { font-size: 2rem; }
+    .trust-divider { display: none; }
+    .dashboard-card { padding: 20px; }
+    .cta-btns { flex-direction: column; align-items: center; }
+  }
+
+  /* ─── SCROLL FADE IN ─── */
+  .fade-up {
+    opacity: 0; transform: translateY(28px);
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .fade-up.visible { opacity: 1; transform: none; }
+
+  .fade-up:nth-child(2) { transition-delay: 0.1s; }
+  .fade-up:nth-child(3) { transition-delay: 0.2s; }
+  .fade-up:nth-child(4) { transition-delay: 0.3s; }
+  .fade-up:nth-child(5) { transition-delay: 0.4s; }
+  .fade-up:nth-child(6) { transition-delay: 0.5s; }
+</style>
+</head>
+<body>
+
+<!-- ─── NAVBAR ─── -->
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-mark">FT</div>
+    FinTrack AI
+  </a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/features">Features</a></li>
+    <li><a href="/goals">Goals</a></li>
+    <li><a href="/about">About</a></li>
+    <li><a href="/contact">Contact Us</a></li>
+    <li><a href="/privacy">Privacy Policy</a></li>
+    <li><a href="/login" class="nav-login">Login</a></li>
+    <li><a href="/signup" class="nav-signup">Sign Up</a></li>
+  </ul>
+  <div class="nav-hamburger" onclick="document.getElementById('navMobile').style.display = document.getElementById('navMobile').style.display === 'flex' ? 'none' : 'flex'">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<div class="nav-mobile" id="navMobile">
+  <a href="/">Home</a>
+  <a href="/features">Features</a>
+  <a href="/goals">Goals</a>
+  <a href="/about">About</a>
+  <a href="/contact">Contact Us</a>
+  <a href="/privacy">Privacy Policy</a>
+  <a href="/login">Login</a>
+  <a href="/signup" class="nm-signup">Sign Up</a>
+</div>
+
+<!-- ─── HERO ─── -->
+<section class="hero">
+  <div class="hero-bg-orb hero-bg-orb-1"></div>
+  <div class="hero-bg-orb hero-bg-orb-2"></div>
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-left">
+        <div class="hero-badge">
+          <div class="hero-badge-dot"></div>
+          AI-Powered Finance Management
+        </div>
+        <h1>Turn Your <span class="highlight">Financial Goals</span> Into Reality</h1>
+        <p class="hero-sub">
+          A powerful AI-driven finance management platform that helps you plan, track, and achieve savings goals with clarity, discipline, and smart insights.
+        </p>
+        <div class="hero-pillars">
+          <span class="hero-pillar">Set a Goal</span>
+          <span class="hero-pillar">Track Progress</span>
+          <span class="hero-pillar">Optimize Habits</span>
+          <span class="hero-pillar">Achieve Faster with AI</span>
+        </div>
+        <div class="hero-ctas">
+          <a href="/signup" class="btn-primary">Start Saving Smarter →</a>
+          <a href="/login" class="btn-secondary">Login</a>
+        </div>
+      </div>
+
+      <!-- Dashboard Mock -->
+      <div class="hero-dashboard">
+        <div class="dashboard-card">
+          <div class="dash-header">
+            <span class="dash-title">My Goals Dashboard</span>
+            <span class="dash-badge">Live</span>
+          </div>
+
+          <div class="dash-goals">
+            <div class="dash-goal-item">
+              <div class="dash-goal-row">
+                <span class="dash-goal-name">
+                  <span class="dash-goal-icon" style="background:rgba(255,193,7,0.1)">🚗</span>
+                  Buy a Car
+                </span>
+                <span class="dash-goal-pct">68%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" style="width:68%"></div>
+              </div>
+            </div>
+            <div class="dash-goal-item">
+              <div class="dash-goal-row">
+                <span class="dash-goal-name">
+                  <span class="dash-goal-icon" style="background:rgba(32,210,140,0.1)">🏠</span>
+                  Home Down Payment
+                </span>
+                <span class="dash-goal-pct">31%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" style="width:31%"></div>
+              </div>
+            </div>
+            <div class="dash-goal-item">
+              <div class="dash-goal-row">
+                <span class="dash-goal-name">
+                  <span class="dash-goal-icon" style="background:rgba(99,102,241,0.1)">🛡️</span>
+                  Emergency Fund
+                </span>
+                <span class="dash-goal-pct">85%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" style="width:85%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dash-stats">
+            <div class="dash-stat">
+              <div class="dash-stat-label">Monthly Saved</div>
+              <div class="dash-stat-val">₹18,400</div>
+              <div class="dash-stat-change">↑ 12% vs last month</div>
+            </div>
+            <div class="dash-stat">
+              <div class="dash-stat-label">Total Goals</div>
+              <div class="dash-stat-val">3 Active</div>
+              <div class="dash-stat-change">1 nearing target</div>
+            </div>
+          </div>
+
+          <div class="dash-ai-tip">
+            <div class="dash-ai-icon">✦</div>
+            <div class="dash-ai-text">
+              <strong>AI Insight:</strong> Reducing dining-out expenses by ₹2,000/mo could help you reach your Car goal <strong>6 weeks earlier.</strong>
+            </div>
+          </div>
+
+          <div class="dash-divider"></div>
+
+          <div class="dash-chart-label" style="font-size:0.7rem;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">Monthly Savings Trend</div>
+          <div class="dash-mini-chart">
+            <div class="chart-bar" style="height:40%"></div>
+            <div class="chart-bar" style="height:55%"></div>
+            <div class="chart-bar" style="height:48%"></div>
+            <div class="chart-bar" style="height:70%"></div>
+            <div class="chart-bar" style="height:60%"></div>
+            <div class="chart-bar" style="height:80%"></div>
+            <div class="chart-bar" style="height:100%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── TRUST STRIP ─── -->
+<div class="trust-strip">
+  <div class="container">
+    <div class="trust-inner">
+      <div class="trust-item">
+        <div class="trust-icon">✦</div>
+        AI-Powered Goal Tracking
+      </div>
+      <div class="trust-divider"></div>
+      <div class="trust-item">
+        <div class="trust-icon">◈</div>
+        Smart Savings Insights
+      </div>
+      <div class="trust-divider"></div>
+      <div class="trust-item">
+        <div class="trust-icon">◉</div>
+        Progress You Can See
+      </div>
+      <div class="trust-divider"></div>
+      <div class="trust-item">
+        <div class="trust-icon">⬡</div>
+        Built for Real Financial Discipline
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── FEATURES ─── -->
+<section class="features">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">Core Features</div>
+      <h2>Everything you need to reach your financial goals</h2>
+      <p>FinTrack AI brings together goal planning, behavioral insights, and AI-backed guidance in one clean, intelligent interface.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card fade-up">
+        <div class="feature-icon">🎯</div>
+        <h3>Smart Goal Planning</h3>
+        <p>Set goals for a car, house, education, gadgets, travel, or emergency funds. Define your target amount and ideal timeline.</p>
+        <span class="feature-tag">Goal Engine →</span>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon">📊</div>
+        <h3>Real-Time Progress Tracking</h3>
+        <p>Monitor how close you are to each target with visual progress bars, milestone indicators, and live savings data.</p>
+        <span class="feature-tag">Live Tracking →</span>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon">✦</div>
+        <h3>AI Financial Insights</h3>
+        <p>Receive personalized AI suggestions to improve your saving habits, cut unnecessary spending, and reach goals faster.</p>
+        <span class="feature-tag">AI-Powered →</span>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon">🔍</div>
+        <h3>Expense & Savings Visibility</h3>
+        <p>Understand exactly where your money goes each month and discover how much can be intelligently optimized.</p>
+        <span class="feature-tag">Full Visibility →</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── HOW IT WORKS ─── -->
+<section class="how">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">How It Works</div>
+      <h2>Three steps to financial clarity</h2>
+      <p>FinTrack AI makes the path from ambition to achievement straightforward, trackable, and intelligent.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-item fade-up">
+        <div class="step-num-wrap"><div class="step-num">01</div></div>
+        <h3>Set Your Goal</h3>
+        <p>Choose what you want to achieve — whether it's a new car, a home, or an emergency fund — and define your target amount and time horizon.</p>
+      </div>
+      <div class="step-item fade-up">
+        <div class="step-num-wrap"><div class="step-num">02</div></div>
+        <h3>Track Every Move</h3>
+        <p>Monitor your savings, spending patterns, and goal progress through a clean, intelligent dashboard built for clarity.</p>
+      </div>
+      <div class="step-item fade-up">
+        <div class="step-num-wrap"><div class="step-num">03</div></div>
+        <h3>Reach It Faster with AI</h3>
+        <p>Use AI-backed suggestions and consistent tracking to stay on course, adjust habits, and hit your financial goals with confidence.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── WHY FINTRACK ─── -->
+<section class="why">
+  <div class="container">
+    <div class="why-inner">
+      <div class="why-content fade-up">
+        <div class="section-label">Why FinTrack AI</div>
+        <h2>Because financial goals need more than motivation.</h2>
+        <p>Most people start saving with excitement. They set a goal, make a plan, and dive in. But without structure, visibility, and discipline, that momentum fades — fast.</p>
+        <p>FinTrack AI solves the three core reasons people fail at saving: lack of clarity, no measurable progress, and zero intelligent feedback.</p>
+        <div class="why-points">
+          <div class="why-point">
+            <div class="why-point-icon">🎯</div>
+            <div class="why-point-text">
+              <strong>Goal-First Architecture</strong>
+              <span>Every feature is built around your specific financial objectives.</span>
+            </div>
+          </div>
+          <div class="why-point">
+            <div class="why-point-icon">📈</div>
+            <div class="why-point-text">
+              <strong>Measurable, Visible Progress</strong>
+              <span>Watch your goals move forward — not just a number, but a story.</span>
+            </div>
+          </div>
+          <div class="why-point">
+            <div class="why-point-icon">✦</div>
+            <div class="why-point-text">
+              <strong>AI That Works For You</strong>
+              <span>Adaptive suggestions that evolve with your spending behavior.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="why-visual fade-up">
+        <div class="why-stat-grid">
+          <div class="why-stat-card accent">
+            <div class="wsc-icon">🎯</div>
+            <div class="wsc-val">94%</div>
+            <div class="wsc-label">Goal completion rate</div>
+          </div>
+          <div class="why-stat-card">
+            <div class="wsc-icon">⚡</div>
+            <div class="wsc-val">2.4×</div>
+            <div class="wsc-label">Faster goal achievement</div>
+          </div>
+          <div class="why-stat-card">
+            <div class="wsc-icon">📉</div>
+            <div class="wsc-val">₹5K+</div>
+            <div class="wsc-label">Avg. monthly savings boost</div>
+          </div>
+          <div class="why-stat-card accent">
+            <div class="wsc-icon">✦</div>
+            <div class="wsc-val">AI</div>
+            <div class="wsc-label">Personalized insights daily</div>
+          </div>
+        </div>
+        <div class="why-monthly">
+          <div class="why-monthly-label">Savings Growth (6 Months)</div>
+          <div class="why-bars">
+            <div class="why-bar" style="height:30%"></div>
+            <div class="why-bar" style="height:44%"></div>
+            <div class="why-bar" style="height:52%"></div>
+            <div class="why-bar" style="height:64%"></div>
+            <div class="why-bar" style="height:78%"></div>
+            <div class="why-bar active" style="height:100%"></div>
+          </div>
+          <div class="why-months">
+            <span class="why-month-label">Nov</span>
+            <span class="why-month-label">Dec</span>
+            <span class="why-month-label">Jan</span>
+            <span class="why-month-label">Feb</span>
+            <span class="why-month-label">Mar</span>
+            <span class="why-month-label">Apr</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── GOALS SHOWCASE ─── -->
+<section class="goals">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">Goal Examples</div>
+      <h2>Whatever you're saving for, we've got you</h2>
+      <p>From dream buys to safety nets — FinTrack AI is built to handle every kind of financial goal.</p>
+    </div>
+    <div class="goals-grid">
+      <div class="goal-card fade-up">
+        <div class="goal-card-top">
+          <span class="goal-emoji">🚗</span>
+          <span class="goal-pct-badge">68%</span>
+        </div>
+        <h4>Buy a Car</h4>
+        <div class="goal-target">Target: ₹8,50,000</div>
+        <div class="goal-progress-track"><div class="goal-progress-fill" style="width:68%"></div></div>
+        <div class="goal-saved">Saved: <span>₹5,78,000</span></div>
+      </div>
+      <div class="goal-card fade-up">
+        <div class="goal-card-top">
+          <span class="goal-emoji">🏠</span>
+          <span class="goal-pct-badge">31%</span>
+        </div>
+        <h4>Buy a House</h4>
+        <div class="goal-target">Target: ₹25,00,000</div>
+        <div class="goal-progress-track"><div class="goal-progress-fill" style="width:31%"></div></div>
+        <div class="goal-saved">Saved: <span>₹7,75,000</span></div>
+      </div>
+      <div class="goal-card fade-up">
+        <div class="goal-card-top">
+          <span class="goal-emoji">🛡️</span>
+          <span class="goal-pct-badge">85%</span>
+        </div>
+        <h4>Emergency Fund</h4>
+        <div class="goal-target">Target: ₹3,00,000</div>
+        <div class="goal-progress-track"><div class="goal-progress-fill" style="width:85%"></div></div>
+        <div class="goal-saved">Saved: <span>₹2,55,000</span></div>
+      </div>
+      <div class="goal-card fade-up">
+        <div class="goal-card-top">
+          <span class="goal-emoji">✈️</span>
+          <span class="goal-pct-badge">47%</span>
+        </div>
+        <h4>Dream Vacation</h4>
+        <div class="goal-target">Target: ₹1,20,000</div>
+        <div class="goal-progress-track"><div class="goal-progress-fill" style="width:47%"></div></div>
+        <div class="goal-saved">Saved: <span>₹56,400</span></div>
+      </div>
+      <div class="goal-card fade-up">
+        <div class="goal-card-top">
+          <span class="goal-emoji">💻</span>
+          <span class="goal-pct-badge">72%</span>
+        </div>
+        <h4>New Laptop</h4>
+        <div class="goal-target">Target: ₹1,30,000</div>
+        <div class="goal-progress-track"><div class="goal-progress-fill" style="width:72%"></div></div>
+        <div class="goal-saved">Saved: <span>₹93,600</span></div>
+      </div>
+      <div class="goal-card fade-up">
+        <div class="goal-card-top">
+          <span class="goal-emoji">🎓</span>
+          <span class="goal-pct-badge">20%</span>
+        </div>
+        <h4>Higher Education</h4>
+        <div class="goal-target">Target: ₹12,00,000</div>
+        <div class="goal-progress-track"><div class="goal-progress-fill" style="width:20%"></div></div>
+        <div class="goal-saved">Saved: <span>₹2,40,000</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CTA ─── -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-inner fade-up">
+      <div class="cta-glow"></div>
+      <div class="section-label">Get Started</div>
+      <h2>Start Building the Future You Want</h2>
+      <p>Create your first savings goal today, track progress with complete clarity, and let AI guide your financial journey — every single day.</p>
+      <div class="cta-btns">
+        <a href="/signup" class="btn-primary">Create Your Account →</a>
+        <a href="/features" class="btn-secondary">Explore Features</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="/" class="footer-logo">
+          <div class="nav-logo-mark">FT</div>
+          FinTrack AI
+        </a>
+        <p class="footer-tagline">Intelligent goal-based finance management powered by AI.</p>
+      </div>
+      <div class="footer-links">
+        <a href="/">Home</a>
+        <a href="/features">Features</a>
+        <a href="/contact">Contact</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/login">Login</a>
+        <a href="/signup">Sign Up</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© 2026 FinTrack AI. All rights reserved.</span>
+      <span class="footer-built">Built with <span>♥</span> for financial clarity</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Scroll-triggered fade-ins
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
