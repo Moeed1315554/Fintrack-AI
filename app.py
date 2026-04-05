@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify
-from werkzeug.security import generate_password_hash,check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 import random
 import time
 import sqlite3
@@ -8,23 +8,20 @@ import smtplib
 
 app = Flask(__name__)
 
+OTP_EXPIRY_SECONDS = 300
 pending_users = {}
-registered_users = {}
-conn = sqlite3.connect("fintrackai.db")
-cur = conn.cursor()
-cur.execute("select * from user")
-x = cur.fetchall()
-reg = []
-for i in x:
-    reg.append(i[3].lower())
 
-OTP_EXPIRY_SECONDS = 300  # 5 minutes
+# ---------------- DB CONNECTION ----------------
+def get_db():
+    return sqlite3.connect("fintrackai.db")
 
 
+# ---------------- OTP ----------------
 def generate_otp():
     return str(random.randint(1000, 9999))
 
 
+# ---------------- HOME ----------------
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -34,134 +31,58 @@ def home():
 def signup_page():
     return render_template("signup.html")
 
+
+# ---------------- LOGIN ----------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     error = None
 
     if request.method == "POST":
-        user_email = request.form.get("email", "").strip()
-        user_password = request.form.get("password", "").strip()
+        email = request.form.get("email")
+        password = request.form.get("password")
 
-        # Check email first
-        conn = sqlite3.connect('fintrackai.db')
+        conn = get_db()
         cur = conn.cursor()
-        cur.execute("SELECT EMAIL,PASSWORD FROM USER")
-        x = dict(cur.fetchall())
 
-        if user_email in x:
-            # Check hashed password
-            if check_password_hash(x[user_email], user_password):
-                return render_template("dashboard.html", user_email=user_email)
+        cur.execute("SELECT PASSWORD_HASH FROM USER WHERE EMAIL=?", (email,))
+        user = cur.fetchone()
+
+        if user:
+            if check_password_hash(user[0], password):
+                return render_template("dashboard.html", user_email=email)
             else:
-                error = "Invalid password."
+                error = "Invalid password"
         else:
-            error = "Invalid email."
+            error = "Invalid email"
+
+        conn.close()
 
     return render_template("login.html", error=error)
 
-@app.route("/income", methods=["GET", "POST"])
-def income():
-    if request.method == "GET":
-        return render_template("income.html")
 
-    email = request.form.get("email", "").strip()
-    income_type = request.form.get("income_type", "").strip()
-    monthly_income = request.form.get("monthly_income", "").strip()
-    additional_income_type = request.form.get("additional_income_type", "").strip()
-    additional_monthly_income = request.form.get("additional_monthly_income", "").strip()
-    dependants = request.form.get("dependants", "").strip()
-
-    conn = sqlite3.connect('fintrackai.db')
-    cur = conn.cursor()
-    cur.execute("SELECT EMAIL,PASSWORD FROM USER")
-    x = dict(cur.fetchall())
-
-    if email not in x:
-        return render_template("income.html", error="Email is required.")
-
-    try:
-
-        # Assumption: USER table contains EMAIL column
-        cur.execute("SELECT USER_ID FROM USER WHERE EMAIL = ?", (email,))
-        user_row = cur.fetchone()
-
-        if not user_row:
-            conn.close()
-            return render_template("income.html", error="No user found with this email.")
-
-        user_id = user_row[0]
-        now = datetime.datetime.now()
-        profile_id = cur.execute("SELECT max(PROFILE_ID) FROM INCOMEPROFILE")
-        x = cur.fetchall()
-        if x[0][0]==None:
-            x = 1
-        else:
-            x = x[0][0]+1
-
-        cur.execute("""
-            INSERT INTO INCOMEPROFILE (
-                PROFILE_ID,
-                USER_ID,
-                INCOME_TYPE,
-                MONTHLY_INCOME,
-                ADDITIONAL_INCOME_TYPE,
-                ADDITIONAL_MONTHLY_INCOME,
-                DEPENDANTS,
-                CREATED_AT,
-                UPDATED_AT
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            int(x),
-            int(user_id),
-            income_type,
-            float(monthly_income),
-            additional_income_type,
-            float(additional_monthly_income),
-            int(dependants),
-            now,
-            now
-        ))
-
-        conn.commit()
-        conn.close()
-
-        return render_template("income.html", success="Income profile saved successfully.")
-
-    except sqlite3.IntegrityError as e:
-        return render_template("income.html", error=f"Database integrity error: {str(e)}")
-
-    except Exception as e:
-        return render_template("income.html", error=f"Error: {str(e)}")
-
+# ---------------- SIGNUP SEND OTP ----------------
 @app.route("/send-otp", methods=["POST"])
 def send_otp():
     try:
         data = request.get_json()
 
-        name = data.get("name", "").strip()
-        email = data.get("email", "").strip().lower()
-        gender = data.get("gender", "").strip()
-        password = data.get("password", "")
-        confirm_password = data.get("confirmPassword", "")
-
-        if not name or not email or not gender or not password or not confirm_password:
-            return jsonify({"success": False, "message": "All fields are required."}), 400
-
-        if gender not in ["Male", "Female"]:
-            return jsonify({"success": False, "message": "Invalid gender selected."}), 400
+        name = data.get("name")
+        email = data.get("email").lower()
+        gender = data.get("gender")
+        password = data.get("password")
+        confirm_password = data.get("confirmPassword")
 
         if password != confirm_password:
-            return jsonify({"success": False, "message": "Passwords do not match."}), 400
+            return jsonify({"success": False, "message": "Passwords do not match"}), 400
 
-        if len(password) < 6:
-            return jsonify({"success": False, "message": "Password must be at least 6 characters."}), 400
-        print(email,reg)
-        if email in reg:
-            return jsonify({"success": False, "message": "User already registered with this email."}), 400
+        conn = get_db()
+        cur = conn.cursor()
+
+        cur.execute("SELECT EMAIL FROM USER WHERE EMAIL=?", (email,))
+        if cur.fetchone():
+            return jsonify({"success": False, "message": "Email already exists"}), 400
 
         otp = generate_otp()
-        expires_at = time.time() + OTP_EXPIRY_SECONDS
 
         pending_users[email] = {
             "name": name,
@@ -169,106 +90,120 @@ def send_otp():
             "gender": gender,
             "password": password,
             "otp": otp,
-            "expires_at": expires_at
+            "expires_at": time.time() + OTP_EXPIRY_SECONDS
         }
 
-        print("\n" + "=" * 60)
-        print(f"CORRECT OTP for {email}: {otp}")
-        print("=" * 60 + "\n")
-        sender_email = "shaswatmohapatra5@gmail.com"
-        app_password = "ywah ukcd bnsp rubo"
+        # EMAIL SEND
+        sender_email = "your_email@gmail.com"
+        app_password = "your_app_password"
 
-        subject = "OTP Verification"
-        body = f"Your OTP is: {otp}"
-        message = f"Subject: {subject}\nTo: {email}\nFrom: {sender_email}\n\n{body}"
+        message = f"Subject: OTP\n\nYour OTP is {otp}"
 
-        server = smtplib.SMTP("smtp.gmail.com",587)
+        server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
-        server.login(sender_email,app_password)
-        server.sendmail(sender_email,email,message)
+        server.login(sender_email, app_password)
+        server.sendmail(sender_email, email, message)
         server.quit()
 
-        return jsonify({
-            "success": True,
-            "message": "OTP generated successfully. Please enter OTP."
-        }), 200
+        return jsonify({"success": True, "message": "OTP sent"})
 
     except Exception as e:
-        return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
+        return jsonify({"success": False, "message": str(e)}), 500
 
 
+# ---------------- VERIFY OTP ----------------
 @app.route("/verify-otp", methods=["POST"])
 def verify_otp():
     try:
         data = request.get_json()
 
-        email = data.get("email", "").strip().lower()
-        otp = data.get("otp", "").strip()
-
-        if not email or not otp:
-            return jsonify({"success": False, "message": "Email and OTP are required."}), 400
+        email = data.get("email")
+        otp = data.get("otp")
 
         if email not in pending_users:
-            return jsonify({"success": False, "message": "No pending signup found for this email."}), 400
+            return jsonify({"success": False, "message": "No signup found"}), 400
 
-        user_data = pending_users[email]
+        user = pending_users[email]
 
-        if time.time() > user_data["expires_at"]:
-            del pending_users[email]
-            return jsonify({"success": False, "message": "OTP expired. Please sign up again."}), 400
+        if time.time() > user["expires_at"]:
+            return jsonify({"success": False, "message": "OTP expired"}), 400
 
-        if otp != user_data["otp"]:
-            return jsonify({"success": False, "message": "Incorrect OTP. User not registered."}), 400
+        if otp != user["otp"]:
+            return jsonify({"success": False, "message": "Wrong OTP"}), 400
 
-        hashed_password = generate_password_hash(user_data["password"])
+        hashed_password = generate_password_hash(user["password"])
 
-        registered_users[email] = {
-            "name": user_data["name"],
-            "email": user_data["email"],
-            "gender": user_data["gender"],
-            "password": hashed_password,
-            "registered_at": time.strftime("%Y-%m-%d %H:%M:%S")
-        }
-        print(registered_users)
-        conn = sqlite3.connect("fintrackai.db")
+        conn = get_db()
         cur = conn.cursor()
-        cur.execute("select max(user_id) from user")
-        x1 = cur.fetchall()
-        cur.execute(f'''
-            INSERT INTO USER VALUES({x1[0][0]+1},"{registered_users[email]['name']}",
-            "{registered_users[email]['gender']}","{registered_users[email]['email']}",
-            "{registered_users[email]['password']}","{datetime.datetime.now()}")
-            ''')
-        conn.commit()
 
-        print(pending_users)
-        
-        cur.execute("select max(otp_id) from VERIFICATION")
-        x2 = cur.fetchall()
-        cur.execute(f'''
-            INSERT INTO VERIFICATION VALUES({x2[0][0]+1},{x1[0][0]+1},
-            {pending_users[email]['otp']},"{pending_users[email]['expires_at']}",
-            "{datetime.datetime.now()}","VERIFIED")
-            ''')
+        # AUTO ID (IMPORTANT FIX)
+        cur.execute("""
+            INSERT INTO USER (NAME, GENDER, EMAIL, PASSWORD_HASH, CREATED_AT)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            user["name"],
+            user["gender"],
+            user["email"],
+            hashed_password,
+            datetime.datetime.now()
+        ))
+
         conn.commit()
+        conn.close()
 
         del pending_users[email]
 
-        return jsonify({
-            "success": True,
-            "message": "User registered successfully."
-        }), 200
+        return jsonify({"success": True, "message": "User registered"})
 
     except Exception as e:
-        return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
+        return jsonify({"success": False, "message": str(e)}), 500
 
 
-@app.route("/users", methods=["GET"])
-def users():
-    return jsonify({
-        "success": True,
-        "registered_users": registered_users
-    }), 200
+# ---------------- INCOME ----------------
+@app.route("/income", methods=["GET", "POST"])
+def income():
+    if request.method == "GET":
+        return render_template("income.html")
+
+    try:
+        email = request.form.get("email")
+
+        conn = get_db()
+        cur = conn.cursor()
+
+        cur.execute("SELECT USER_ID FROM USER WHERE EMAIL=?", (email,))
+        user = cur.fetchone()
+
+        if not user:
+            return render_template("income.html", error="User not found")
+
+        user_id = user[0]
+
+        cur.execute("""
+            INSERT INTO INCOMEPROFILE (
+                USER_ID, INCOME_TYPE, MONTHLY_INCOME,
+                ADDITIONAL_INCOME_TYPE, ADDITIONAL_MONTHLY_INCOME,
+                DEPENDANTS, CREATED_AT, UPDATED_AT
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            user_id,
+            request.form.get("income_type"),
+            float(request.form.get("monthly_income")),
+            request.form.get("additional_income_type"),
+            float(request.form.get("additional_monthly_income")),
+            int(request.form.get("dependants")),
+            datetime.datetime.now(),
+            datetime.datetime.now()
+        ))
+
+        conn.commit()
+        conn.close()
+
+        return render_template("income.html", success="Saved successfully")
+
+    except Exception as e:
+        return render_template("income.html", error=str(e))
 
 
 if __name__ == "__main__":
