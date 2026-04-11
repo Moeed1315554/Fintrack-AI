@@ -5,6 +5,7 @@ import datetime
 import random
 import time
 import smtplib
+from email.mime.text import MIMEText
 
 app = Flask(__name__)
 app.secret_key = "secret123"
@@ -13,7 +14,7 @@ app.secret_key = "secret123"
 OTP_EXPIRY_SECONDS = 300
 pending_users = {}
 
-# 🔐 EMAIL CONFIG (use your own app password)
+# 🔐 GMAIL CONFIG (USE YOUR APP PASSWORD)
 SENDER_EMAIL = "mdmoeed1315554@gmail.com"
 APP_PASSWORD = "ghvi lyjq zknu agoi"
 
@@ -34,92 +35,93 @@ def signup_page():
 # ---------------- SEND OTP ----------------
 @app.route("/send-otp", methods=["POST"])
 def send_otp():
-    data = request.get_json()
-
-    name = data.get("name")
-    email = data.get("email").lower()
-    gender = data.get("gender")
-    password = data.get("password")
-    confirm = data.get("confirmPassword")
-
-    if password != confirm:
-        return jsonify({"success": False, "message": "Passwords do not match"})
-
-    conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute("SELECT 1 FROM USER WHERE EMAIL=?", (email,))
-    if cur.fetchone():
-        return jsonify({"success": False, "message": "Email already exists"})
-
-    otp = str(random.randint(1000, 9999))
-
-    pending_users[email] = {
-        "name": name,
-        "email": email,
-        "gender": gender,
-        "password": password,
-        "otp": otp,
-        "expires": time.time() + OTP_EXPIRY_SECONDS
-    }
-
-    # Send Email
     try:
-        msg = f"Subject: OTP Verification\n\nYour OTP is {otp}"
+        data = request.get_json()
+
+        name = data.get("name")
+        email = data.get("email")
+        password = data.get("password")
+        gender = data.get("gender")
+
+        otp = str(random.randint(1000, 9999))
+
+        pending_users[email] = {
+            "name": name,
+            "email": email,
+            "password": password,
+            "gender": gender,
+            "otp": otp,
+            "expires_at": time.time() + OTP_EXPIRY_SECONDS
+        }
+
+        # ✅ GMAIL SMTP
+        msg = MIMEText(f"Your OTP is: {otp}")
+        msg["Subject"] = "FinTrack AI OTP"
+        msg["From"] = SENDER_EMAIL
+        msg["To"] = email
+
         server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
         server.login(SENDER_EMAIL, APP_PASSWORD)
-        server.sendmail(SENDER_EMAIL, email, msg)
+        server.sendmail(SENDER_EMAIL, email, msg.as_string())
         server.quit()
-    except:
-        print("OTP:", otp)
 
-    return jsonify({"success": True})
+        print("OTP SENT:", otp)
+
+        return jsonify({"success": True})
+
+    except Exception as e:
+        print("SEND OTP ERROR:", str(e))
+        return jsonify({"success": False, "message": str(e)})
 
 # ---------------- VERIFY OTP ----------------
 @app.route("/verify-otp", methods=["POST"])
 def verify_otp():
-    data = request.get_json()
-    email = data.get("email")
-    otp = data.get("otp")
+    try:
+        data = request.get_json()
+        email = data.get("email")
+        otp = data.get("otp")
 
-    if email not in pending_users:
-        return jsonify({"success": False})
+        if email not in pending_users:
+            return jsonify({"success": False, "message": "No signup found"})
 
-    user = pending_users[email]
+        user = pending_users[email]
 
-    if time.time() > user["expires"]:
+        if time.time() > user["expires_at"]:
+            del pending_users[email]
+            return jsonify({"success": False, "message": "OTP expired"})
+
+        if otp != user["otp"]:
+            return jsonify({"success": False, "message": "Wrong OTP"})
+
+        conn = get_db()
+        cur = conn.cursor()
+
+        cur.execute("SELECT MAX(USER_ID) FROM USER")
+        result = cur.fetchone()[0]
+        user_id = 1 if result is None else result + 1
+
+        cur.execute("""
+            INSERT INTO USER (USER_ID, USER_NAME, GENDER, EMAIL, PASSWORD_HASH, CREATED_AT)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            user_id,
+            user["name"],
+            user["gender"],
+            user["email"],
+            generate_password_hash(user["password"]),
+            datetime.datetime.now()
+        ))
+
+        conn.commit()
+        conn.close()
+
         del pending_users[email]
-        return jsonify({"success": False, "message": "OTP expired"})
 
-    if otp != user["otp"]:
-        return jsonify({"success": False, "message": "Wrong OTP"})
+        return jsonify({"success": True})
 
-    conn = get_db()
-    cur = conn.cursor()
-
-    # Generate USER_ID
-    cur.execute("SELECT MAX(USER_ID) FROM USER")
-    result = cur.fetchone()[0]
-    user_id = 1 if result is None else result + 1
-
-    cur.execute("""
-        INSERT INTO USER (USER_ID, USER_NAME, GENDER, EMAIL, PASSWORD_HASH, CREATED_AT)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (
-        user_id,
-        user["name"],
-        user["gender"],
-        user["email"],
-        generate_password_hash(user["password"]),
-        datetime.datetime.now()
-    ))
-
-    conn.commit()
-    conn.close()
-    del pending_users[email]
-
-    return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
 
 # ---------------- LOGIN ----------------
 @app.route("/login", methods=["GET", "POST"])
@@ -147,10 +149,9 @@ def login():
 # ---------------- DASHBOARD ----------------
 @app.route("/dashboard")
 def dashboard():
-    if "email" not in session:
+    if "user_id" not in session:
         return redirect("/login")
-
-    return render_template("dashboard.html", user_email=session["email"])
+    return render_template("dashboard.html")
 
 # ---------------- INCOME ----------------
 @app.route("/income", methods=["GET", "POST"])
@@ -246,59 +247,20 @@ def expense():
     except Exception as e:
         return render_template("expense.html", error=str(e))
 
-# ---------------- GOALS (GET + POST FIXED) ----------------
+# ---------------- GOALS ----------------
 @app.route("/goals", methods=["GET", "POST"])
 def goals():
     if "user_id" not in session:
         return redirect("/login")
 
-    # ✅ Page load
     if request.method == "GET":
         return render_template("goals.html")
 
-    # ✅ AJAX POST
     try:
-        user_id = session["user_id"]
-
-        goal_name = request.form.get("goal_name")
         goal_amount = float(request.form.get("goal_amount") or 0)
-        start_date = request.form.get("start_date")
-        end_date = request.form.get("end_date")
-        status = request.form.get("goal_status")
 
-        monthly = round(goal_amount / 12, 2) if goal_amount else 0
+        monthly = round(goal_amount / 12, 2)
         duration = 12
-
-        conn = get_db()
-        cur = conn.cursor()
-
-        try:
-            cur.execute("SELECT MAX(GOAL_ID) FROM GOALS")
-            result = cur.fetchone()[0]
-            goal_id = 1 if result is None else result + 1
-
-            cur.execute("""
-                INSERT INTO GOALS (
-                    GOAL_ID, USER_ID, GOAL_NAME, GOAL_AMOUNT,
-                    START_DATE, END_DATE, STATUS, CREATED_AT
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                goal_id,
-                user_id,
-                goal_name,
-                goal_amount,
-                start_date,
-                end_date,
-                status,
-                datetime.datetime.now()
-            ))
-
-            conn.commit()
-        except:
-            pass
-
-        conn.close()
 
         return jsonify({
             "success": True,
