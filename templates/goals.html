@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goals</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:'Poppins',sans-serif;
+        }
+
+        body{
+            min-height:100vh;
+            background:
+                radial-gradient(circle at top left, rgba(34,197,94,0.15), transparent 25%),
+                radial-gradient(circle at bottom right, rgba(59,130,246,0.15), transparent 30%),
+                linear-gradient(135deg, #020617, #0f172a, #030712);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            color:white;
+            padding:15px; /* Reduced padding for mobile */
+        }
+
+        .container{
+            width:100%;
+            /* Laptop/Desktop width */
+            max-width:850px; 
+            background:rgba(255,255,255,0.05);
+            border-radius:25px;
+            padding:40px;
+            backdrop-filter:blur(15px);
+            border:1px solid rgba(255,255,255,0.08);
+            box-shadow:0 20px 60px rgba(0,0,0,0.35);
+        }
+
+        h1{
+            font-size: clamp(22px, 5vw, 28px); /* Fluid typography */
+            margin-bottom:10px;
+        }
+
+        .subtitle{
+            color:#cbd5e1;
+            margin-bottom:25px;
+            font-size: clamp(14px, 2vw, 16px);
+        }
+
+        form{
+            display:grid;
+            /* Default: 2 columns for Laptop/Tablet */
+            grid-template-columns: repeat(2, 1fr);
+            gap:20px;
+        }
+
+        .full{
+            grid-column: 1 / -1;
+        }
+
+        .form-group{
+            display:flex;
+            flex-direction:column;
+        }
+
+        label{
+            font-size:14px;
+            margin-bottom:6px;
+            color:#e2e8f0;
+        }
+
+        input, select{
+            width:100%;
+            padding:12px;
+            border-radius:12px;
+            border:1px solid rgba(255,255,255,0.08);
+            outline:none;
+            background:rgba(255,255,255,0.08);
+            color:white;
+            font-size: 16px; /* Prevents auto-zoom on iOS */
+        }
+
+        input:focus, select:focus{
+            border:1px solid #3b82f6;
+            box-shadow:0 0 0 4px rgba(59,130,246,0.15);
+        }
+
+        select option{
+            color:black;
+        }
+
+        .btn-row{
+            grid-column:1 / -1;
+            display:flex;
+            gap:12px;
+            flex-wrap:wrap;
+            margin-top:10px;
+        }
+
+        .btn{
+            padding:14px 24px;
+            border-radius:12px;
+            border:none;
+            cursor:pointer;
+            font-weight:600;
+            text-decoration:none;
+            transition:0.3s ease;
+            text-align: center;
+        }
+
+        .primary{
+            background:linear-gradient(135deg,#10b981,#3b82f6);
+            color:white;
+            flex: 2; /* Primary button takes more space on mobile */
+            min-width: 150px;
+        }
+
+        .primary:hover{
+            transform:translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .secondary{
+            background:rgba(255,255,255,0.08);
+            color:white;
+            border:1px solid rgba(255,255,255,0.08);
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .secondary:hover{
+            background:rgba(255,255,255,0.12);
+        }
+
+        .message{
+            margin-bottom:18px;
+            padding:12px;
+            border-radius:10px;
+            display:none;
+        }
+
+        .message.error{
+            display:block;
+            background:rgba(239,68,68,0.15);
+            color:#fecaca;
+            border: 1px solid rgba(239,68,68,0.2);
+        }
+
+        /* Modal Responsiveness */
+        .modal{
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,0.8);
+            display:none;
+            align-items:center;
+            justify-content:center;
+            padding:20px;
+            z-index:999;
+        }
+
+        .modal-content{
+            width:100%;
+            max-width:450px;
+            background:#0f172a;
+            border:1px solid rgba(255,255,255,0.1);
+            border-radius:22px;
+            padding:30px;
+            box-shadow:0 20px 60px rgba(0,0,0,0.5);
+            animation:fadeUp 0.35s ease;
+        }
+
+        /* MEDIA QUERIES */
+
+        /* Tablet (max-width: 768px) */
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px;
+            }
+        }
+
+        /* Phone (max-width: 600px) */
+        @media (max-width: 600px) {
+            form {
+                grid-template-columns: 1fr; /* Stack inputs vertically */
+                gap: 15px;
+            }
+            .container {
+                padding: 20px;
+                border-radius: 20px;
+            }
+            .btn-row {
+                flex-direction: column; /* Stack buttons on small phones */
+            }
+            .btn {
+                width: 100%;
+            }
+        }
+
+        @keyframes fadeUp{
+            from{ opacity:0; transform:translateY(20px); }
+            to{ opacity:1; transform:translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Create Goal 🎯</h1>
+        <p class="subtitle">Add your goal details. Monthly target and goal duration will be calculated automatically.</p>
+
+        <div id="errorBox" class="message error" style="display:none;"></div>
+
+        <form id="goalForm">
+            <div class="form-group full">
+                <label>Email</label>
+                <input type="email" name="email" required placeholder="Enter your email">
+            </div>
+
+            <div class="form-group">
+                <label>Goal Name</label>
+                <input type="text" name="goal_name" required placeholder="Car, House, Trip etc.">
+            </div>
+
+            <div class="form-group">
+                <label>Goal Amount</label>
+                <input type="number" step="0.01" name="goal_amount" required placeholder="Enter goal amount">
+            </div>
+
+            <div class="form-group">
+                <label>Start Date</label>
+                <input type="date" name="start_date" required>
+            </div>
+
+            <div class="form-group">
+                <label>End Date</label>
+                <input type="date" name="end_date" required>
+            </div>
+
+            <div class="form-group full">
+                <label>Status</label>
+                <select name="goal_status" required>
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="PAUSED">PAUSED</option>
+                    <option value="ACHIEVED">ACHIEVED</option>
+                    <option value="EXPIRED">EXPIRED</option>
+                    <option value="INACTIVE">INACTIVE</option>
+                </select>
+            </div>
+
+            <div class="btn-row">
+                <button type="submit" class="btn primary">Save Goal</button>
+                <a href="/dashboard" class="btn secondary">Back</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="modal" id="goalModal">
+        <div class="modal-content">
+            <h2>Goal Created Successfully 🎉</h2>
+            <p>Your goal has been saved successfully.</p>
+            <div class="result-box" style="margin:18px 0; padding:16px; border-radius:14px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08);">
+                <p style="margin-bottom:8px;"><strong>Monthly Saving Target:</strong> ₹<span id="monthlyTargetValue"></span></p>
+                <p><strong>Duration:</strong> <span id="durationValue"></span> months</p>
+            </div>
+            <button class="close-btn" onclick="closeModal()" style="margin-top:10px; width:100%; padding:12px; border:none; border-radius:12px; background:linear-gradient(135deg,#10b981,#3b82f6); color:white; font-weight:600; cursor:pointer;">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById("goalForm");
+        const modal = document.getElementById("goalModal");
+        const monthlyTargetValue = document.getElementById("monthlyTargetValue");
+        const durationValue = document.getElementById("durationValue");
+        const errorBox = document.getElementById("errorBox");
+
+        form.addEventListener("submit", async function(e){
+            e.preventDefault();
+            errorBox.style.display = "none";
+            errorBox.innerText = "";
+            const formData = new FormData(form);
+
+            try{
+                const response = await fetch("/goals", {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await response.json();
+                if(data.success){
+                    monthlyTargetValue.innerText = data.monthlytarget;
+                    durationValue.innerText = data.durationinmonth;
+                    modal.style.display = "flex";
+                    form.reset();
+                }else{
+                    errorBox.style.display = "block";
+                    errorBox.innerText = data.error || "Something went wrong.";
+                }
+            }catch(err){
+                errorBox.style.display = "block";
+                errorBox.innerText = "Request failed. Please try again.";
+            }
+        });
+
+        function closeModal(){
+            modal.style.display = "none";
+        }
+    </script>
+</body>
+</html>
