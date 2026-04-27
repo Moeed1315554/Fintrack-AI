@@ -46,7 +46,7 @@ def login():
     error = None
 
     if request.method == "POST":
-        user_email = request.form.get("email", "").strip()
+        user_email = request.form.get("email", "").strip().lower()
         user_password = request.form.get("password", "").strip()
 
         conn = get_db()
@@ -76,7 +76,7 @@ def income():
     if request.method == "GET":
         return render_template("income.html")
 
-    email                   = request.form.get("email", "").strip()
+    email                   = request.form.get("email", "").strip().lower()
     income_type             = request.form.get("income_type", "").strip()
     monthly_income          = request.form.get("monthly_income", "").strip()
     additional_income_type  = request.form.get("additional_income_type", "").strip()
@@ -142,7 +142,7 @@ def expense():
     if request.method == "GET":
         return render_template("expense.html")
 
-    email         = request.form.get("email", "").strip()
+    email         = request.form.get("email", "").strip().lower()
     groceries     = request.form.get("groceries", "").strip()
     travel        = request.form.get("travel", "").strip()
     medfit        = request.form.get("medfit", "").strip()
@@ -220,7 +220,7 @@ def goals():
         return render_template("goals.html")
 
     try:
-        email       = request.form.get("email", "").strip()
+        email       = request.form.get("email", "").strip().lower()
         goal_name   = request.form.get("goal_name", "").strip()
         goal_amount = request.form.get("goal_amount", "").strip()
         start_date  = request.form.get("start_date", "").strip()
@@ -298,13 +298,16 @@ def goals():
         return jsonify({"success": False, "error": str(e)})
 
 
-# ─── Send OTP ──────────────────────────────────────────────────────────────────
+# ─── Send OTP ────────────────────────────────────────────────────────────────
 @app.route("/send-otp", methods=["POST"])
 def send_otp():
     try:
         import requests as http_requests
 
-        data     = request.get_json()
+        # ✅ Handle both JSON and form-data
+        data = request.get_json(silent=True) or request.form
+        print("📥 DATA:", data)
+
         name     = data.get("name", "").strip()
         email    = data.get("email", "").strip().lower()
         gender   = data.get("gender")
@@ -313,7 +316,7 @@ def send_otp():
         if not name or not email:
             return jsonify({"message": "Name and email required"}), 400
 
-        # FIX: check if email is already registered before sending OTP
+        # ✅ Check if email already exists
         conn = get_db()
         cur  = conn.cursor()
         cur.execute("SELECT 1 FROM USER WHERE EMAIL = ?", (email,))
@@ -322,6 +325,7 @@ def send_otp():
             return jsonify({"message": "Email already registered."}), 400
         conn.close()
 
+        # ✅ Generate OTP
         otp = generate_otp()
 
         pending_users[email] = {
@@ -333,12 +337,15 @@ def send_otp():
             "expires_at": time.time() + OTP_EXPIRY_SECONDS
         }
 
+        # ✅ Load env variables
         api_key      = os.getenv("MAIL_API")
         sender_email = os.getenv("SENDER_MAIL")
+
 
         if not api_key or not sender_email:
             return jsonify({"message": "Email service not configured"}), 500
 
+        # ✅ Send email via Brevo
         response = http_requests.post(
             "https://api.brevo.com/v3/smtp/email",
             headers={
@@ -354,13 +361,24 @@ def send_otp():
             }
         )
 
+        print("📡 RESPONSE STATUS:", response.status_code)
+        print("📡 RESPONSE TEXT:", response.text)
+
         if response.status_code not in [200, 201]:
-            return jsonify({"message": "Failed to send OTP", "error": response.text}), 500
+            return jsonify({
+                "message": "Failed to send OTP",
+                "error": response.text
+            }), 500
 
         return jsonify({"message": "OTP sent successfully"}), 200
 
     except Exception as e:
+        print("❌ ERROR:", str(e))   # 🔥 VERY IMPORTANT
         return jsonify({"message": f"Error: {str(e)}"}), 500
+
+
+
+
 
 
 # ─── Verify OTP & Register User ────────────────────────────────────────────────
@@ -452,7 +470,7 @@ def analytics():
 def analytics_data():
     try:
         data  = request.get_json()
-        email = data.get("email", "").strip()
+        email = data.get("email", "").strip().lower()
 
         if not email:
             return jsonify({"success": False, "error": "Email is required."})
